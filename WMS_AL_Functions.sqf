@@ -20,7 +20,7 @@
 
 WMS_AL_Version		= "v0.15_2022MAY16";
 WMS_AmbientLife		= true;
-WMS_AL_Standalone	= false;
+WMS_AL_Standalone	= true;
 WMS_AL_LOGs			= false;
 WMS_AL_IncludeLoc	= true;
 WMS_AL_StripOffUnit = false;
