@@ -18,47 +18,49 @@
 	if (true)then {execVM "WMS_AL_Functions.sqf"};
 */
 
-WMS_AL_Version		= "v0.15_2022MAY16";
+WMS_AL_Version		= "v0.17_2022MAY17";
 WMS_AmbientLife		= true;
 WMS_AL_Standalone	= true;
-WMS_AL_LOGs			= false;
+WMS_AL_LOGs			= true;
 WMS_AL_IncludeLoc	= true;
 WMS_AL_StripOffUnit = false;
 WMS_AL_LockVehicles = false;
 WMS_AL_Faction		= CIVILIAN;
 WMS_AL_VHLmax		= 35;
 WMS_AL_UnitMax		= 10;
+WMS_AL_VhlBalance	= [1,1,0,1,2,1,1]; //0 = AIR, 1 = GROUND, 2 = SEA
 WMS_AL_Skills		= [0.8, 0.7, 0.2, 0.3, 0.3, 0.6, 0, 0.5, 0.5]; //"spotDistance","spotTime","aimingAccuracy","aimingShake","aimingSpeed","reloadSpeed","courage","commanding","general"
 WMS_AL_Units		= [//array of classnames
 						"C_man_p_beggar_F","C_man_1","C_Man_casual_1_F","C_Man_casual_2_F","C_Man_casual_3_F","C_Man_casual_4_F","C_Man_casual_5_F","C_Man_casual_6_F","C_man_polo_1_F","C_man_polo_2_F","C_man_polo_3_F","C_man_polo_4_F","C_man_polo_5_F","C_man_polo_6_F",
 						"C_Man_ConstructionWorker_01_Black_F","C_Man_ConstructionWorker_01_Blue_F","C_Man_ConstructionWorker_01_Red_F","C_Man_ConstructionWorker_01_Vrana_F","C_man_p_fugitive_F","C_man_p_shorts_1_F","C_man_hunter_1_F","C_Man_Paramedic_01_F","C_Man_UtilityWorker_01_F"
 					]; 
 WMS_AL_Vehicles		= [[ //array of arrays or classnames //[[AIR],[GROUND],[SEA]]
-						"C_Heli_Light_01_civil_F","C_IDAP_Heli_Transport_02_F","C_Heli_light_01_digital_F","C_Heli_light_01_shadow_F" //17% chance to spawn
+						"C_Heli_Light_01_civil_F","C_IDAP_Heli_Transport_02_F","C_Heli_light_01_digital_F","C_Heli_light_01_shadow_F"
 					],[
 						"C_Van_01_fuel_F","C_Hatchback_01_F","C_Hatchback_01_sport_F","C_Offroad_02_unarmed_F","C_Truck_02_transport_F","C_Truck_02_covered_F","C_Offroad_01_F","C_Offroad_01_comms_F","C_Offroad_01_repair_F","C_Quadbike_01_F","C_SUV_01_F","C_Tractor_01_F","C_Van_01_transport_F","C_Van_01_box_F","C_Van_02_medevac_F","C_Van_02_transport_F"
 					],[
-						"C_Boat_Civil_01_F","C_Boat_Civil_01_police_F","C_Boat_Civil_01_rescue_F","C_Rubberboat","C_Boat_Transport_02_F","C_Scooter_Transport_01_F" //not used yet
+						"C_Boat_Civil_01_F","C_Boat_Civil_01_police_F","C_Boat_Civil_01_rescue_F","C_Rubberboat","C_Boat_Transport_02_F","C_Scooter_Transport_01_F"
 					]];
 
 WMS_AL_AceIsRunning = true; //Automatic
 WMS_AL_LastUsedPos	= [0,0,0]; //Dynamic
 WMS_AL_Roads		= []; //array of roads //Dynamic //pushBack //You can put yours if you want but the system will pushback roads here
+WMS_AL_SeaPos		= [];
 WMS_AL_Running		= [[],[]]; //array of arrays of data [[VEHICLES],[INFANTRY]] //[HexaID,time,group,vehicle]
 
 ///////////////////////////////////////
 if (WMS_AL_Standalone) then {
-		WMS_exileFireAndForget = false;
+		//WMS_exileFireAndForget = false;
 	WMS_AMS_MaxGrad 	= 0.15;
-		WMS_exileToastMsg 	= false; //Exile Mod Notifications
+		//WMS_exileToastMsg 	= false; //Exile Mod Notifications
 	WMS_Pos_Locals 		= []; //AutoScan
 	WMS_Pos_Villages	= []; //AutoScan
 	WMS_Pos_Cities 		= []; //AutoScan
 	WMS_Pos_Capitals 	= []; //AutoScan
-		WMS_Pos_Forests 	= []; //DIY, if no position, back to random _pos
-		WMS_Pos_Military 	= []; //DIY, if no position, back to random _pos
-		WMS_Pos_Factory 	= []; //DIY, if no position, back to random _pos
-		WMS_Pos_Custom	 	= []; //DIY, if no position, back to random _pos
+		//WMS_Pos_Forests 	= []; //DIY, if no position, back to random _pos
+		//WMS_Pos_Military 	= []; //DIY, if no position, back to random _pos
+		//WMS_Pos_Factory 	= []; //DIY, if no position, back to random _pos
+		//WMS_Pos_Custom	 	= []; //DIY, if no position, back to random _pos
 };
 ///////////////////////////////////////
 WMS_fnc_AL_ManagementLoop = {
@@ -92,9 +94,9 @@ WMS_fnc_AL_ManagementLoop = {
 		};
 		{
 			//destroying stuck vehicles
-			if (speed (_x select 3) < 5) then {
+			if (speed (_x select 3) < 3) then {
 				_lastPos = _x select 3 getVariable ["WMS_AL_LastPos", [0,0,0]];
-				if ((position (_x select 3)) distance2D _lastPos < 50) then {
+				if ((position (_x select 3)) distance2D _lastPos < 30) then {
 					if (({isPlayer _x} count crew (_x select 3)) == 0) then {
 						if (WMS_AL_LOGs) then {diag_log format ['|WAK|TNA|WMS|WMS_fnc_AL_ManagementLoop %1 Is stuck ! bye bye', _x]};
 						{moveOut _x; _x setDamage 1} forEach crew (_x select 3);
@@ -104,7 +106,7 @@ WMS_fnc_AL_ManagementLoop = {
 			};
 			uisleep 0.2;
 		}forEach (WMS_AL_Running select 0);
-		uisleep 120;
+		uisleep 115;
 	};
 };
 WMS_fnc_AL_CollectPos = { //at server launch
@@ -120,7 +122,6 @@ WMS_fnc_AL_CollectPos = { //at server launch
 	if (WMS_AL_LOGs) then {Diag_log '|WAK|TNA|WMS|[AL] collecting CAPITALS positions'};
 	{WMS_Pos_Capitals pushback getPos _x}forEach (nearestLocations [_worldCenter, ["nameCityCapital"],_worldDiameter]);
 };
-
 WMS_fnc_AL_FindRoad = { //at server launch
 	if (WMS_AL_LOGs) then {diag_log format ['|WAK|TNA|WMS|WMS_fnc_AL_FindRoad time %1', time]};
 	private _arrayOfPos = WMS_Pos_Villages+WMS_Pos_Cities+WMS_Pos_Capitals;
@@ -137,6 +138,38 @@ WMS_fnc_AL_FindRoad = { //at server launch
 	}forEach _arrayOfPos;
 	if (WMS_AL_LOGs) then {Diag_log format ['|WAK|TNA|WMS|WMS_fnc_AL_FindRoad %1 roads found', (count WMS_AL_Roads)]};
 };
+WMS_fnc_AL_ScanForWater = { //this one will be a tricky one
+	if (WMS_AL_LOGs) then {Diag_log format ['|WAK|TNA|WMS|WMS_fnc_AL_ScanForWater start scanning %1', time]};
+	params [
+		["_resolution", 1000], //1km resolution
+		["_closeLand", true] //thats pretty hardcore on server for few seconds if a lot of water but it's worth it
+	];
+	private _size = worldSize;
+	private _divide = (round (_size/_resolution))-1;
+	private _steps = []; //[1000,2000,3000,4000,5000,6000,7000,8000] for a 8km map 1000m resolution
+	private _step = _resolution;
+	private _scanPos = [_resolution,_resolution];
+	for "_i" from 1 to _divide do {
+		_steps pushback _step;
+		_step = _step+_resolution;
+	};
+	{
+		private _Xaxis = _x;
+		{
+			_scanPos = [_Xaxis,_x,0];
+			if (surfaceIsWater _scanPos && {((ATLtoASL _scanPos) select 2) <= -3}) then {
+				if (_closeLand) then {
+					private _land = nearestTerrainObjects [_scanPos,["TREE", "SMALL TREE", "BUSH", "BUILDING", "HOUSE","ROAD"],1500];
+					if (count _land != 0) then {WMS_AL_SeaPos pushback _scanPos};
+				}else{
+					WMS_AL_SeaPos pushback _scanPos;
+				};
+			};
+		}forEach _steps; //this steps become Y axis
+	}forEach _steps; //this steps become X axis
+	if (WMS_AL_LOGs) then {Diag_log format ['|WAK|TNA|WMS|WMS_fnc_AL_ScanForWater Scan finished  %1, %2 positions found', time, count WMS_AL_SeaPos]};
+	(count WMS_AL_SeaPos)
+};
 WMS_fnc_AL_generateHexaID = {	//will be used to find the mission data in arrays
 	private _hexaBase = [0,1,2,3,4,5,6,7,8,9,"a","b","c","e","e","f"];
 	private _hexaArray = [];
@@ -151,18 +184,23 @@ WMS_fnc_AL_createVHL = {
 	if (WMS_AL_LOGs) then {diag_log format ['|WAK|TNA|WMS|WMS_fnc_AL_createVHL _this %1', _this]};
 	params [
 		["_pos", []],
-		["_vhl", selectRandom (WMS_AL_Vehicles select (selectRandom [1,1,0,1,1,1]))]
+		["_vhl", selectRandom (WMS_AL_Vehicles select (selectRandom WMS_AL_VhlBalance))]
 	];
 	private _dir = Random 359;
 	private _waypoints = [];
 	private _hexaID = []call WMS_fnc_AL_generateHexaID;
 	if(count _pos == 0) then {
-		_road = selectRandom WMS_AL_Roads;
-		_pos = position _road;
-		if (_pos distance2D WMS_AL_LastUsedPos < 20) then {
-			_pos = [_pos, 25, 250, 20, 0, 0, 0, [], [([] call BIS_fnc_randomPos),[]]] call BIS_fnc_FindSafePos;
+		if (_vhl in (WMS_AL_Vehicles select 2) && {count WMS_AL_SeaPos >= 9}) then {
+			_pos = selectRandom WMS_AL_SeaPos;
+		} else {
+			if (_vhl in (WMS_AL_Vehicles select 2)) then {_vhl = selectRandom (WMS_AL_Vehicles select 1)};
+			_road = selectRandom WMS_AL_Roads;
+			_pos = position _road;
+			if (_pos distance2D WMS_AL_LastUsedPos < 20) then {
+				_pos = [_pos, 25, 250, 20, 0, 0, 0, [], [([] call BIS_fnc_randomPos),[]]] call BIS_fnc_FindSafePos;
+			};
+			_dir = direction _road;
 		};
-		_dir = direction _road;
 		WMS_AL_LastUsedPos = _pos;
 	};
 	private _grp = createGroup WMS_AL_Faction;
@@ -186,7 +224,6 @@ WMS_fnc_AL_createVHL = {
 		"];//params ["_unit", "_killer", "_instigator", "_useEffects"];
 	(WMS_AL_Running select 0) pushBack [_hexaID,time,_grp,_vhlObject,_waypoints]; //[HexaID,time,group,vehicle,[waypoints]]
 };
-
 WMS_fnc_AL_createUnits = {
 	if (WMS_AL_LOGs) then {diag_log format ['|WAK|TNA|WMS|WMS_fnc_AL_createUnits _this %1', _this]};
 	params [
@@ -212,7 +249,6 @@ WMS_fnc_AL_createUnits = {
 	[[_unitObject]] call WMS_fnc_AL_setUnits;
 	(WMS_AL_Running select 1) pushBack [_hexaID,time,_grp,_unitObject,_waypoints]; //[HexaID,time,group,vehicle,[waypoints]]
 };
-
 WMS_fnc_AL_setUnits = {
 	if (WMS_AL_LOGs) then {diag_log format ['|WAK|TNA|WMS|WMS_fnc_AL_setUnits _this %1', _this]};
 	private [];
@@ -320,6 +356,10 @@ WMS_fnc_AL_Patrol = {
 		["_combat", false]
 	];
 	private _waypoints = [];
+	private _wpt0 = [];
+	private _wpt1 = [];
+	private _wpt2 = [];
+	private _wpt3 = [];
 	//create Waypoints, lets say 4 of them, in random cities for Vehicles, around for dudes
 	if (_infantry) then {
 		if (_combat) then {
@@ -328,33 +368,55 @@ WMS_fnc_AL_Patrol = {
 			[_grp, _pos, 150, 4, "MOVE", "CARELESS", "BLUE", "LIMITED", "COLUMN", "", [1,2,3]] call CBA_fnc_taskPatrol;
 		};
 	} else {
-		private _wpt0 = _grp addWaypoint [_pos, 50, 0, format["WPT0_%1",round time]];
+		if (surfaceIsWater _pos) then {
+			_wpt0 = _grp addWaypoint [_pos, 50, 0, format["WPT0_%1",round time]];
+			_wpt1 = _grp addWaypoint [(selectRandom WMS_AL_SeaPos), 150, 1, format["WPT1_%1",round time]];
+			_wpt2 = _grp addWaypoint [(selectRandom WMS_AL_SeaPos), 150, 2, format["WPT2_%1",round time]];
+			private _lastPos = (selectRandom WMS_AL_SeaPos);
+			if (_lastPos distance2D (getWPPos _wpt2) < 150 || _lastPos distance2D (getWPPos _wpt0) < 50) then {
+				private _findPos = true;
+				private _cycles = 100;
+				while {_findPos} do {
+					_lastPos = (selectRandom WMS_AL_SeaPos);
+					if (_lastPos distance2D (getWPPos _wpt2) > 50 && _lastPos distance2D (getWPPos _wpt0) > 50) then {
+						_findPos = false;
+						_wpt3 = _grp addWaypoint [_lastPos, 150, 3, format["WPT3_%1",round time]];
+					};
+					_cycles = _cycles-1;
+					if (_cycles < 1) then {
+						_findPos = false;
+						_wpt3 = _grp addWaypoint [_lastPos, 150, 3, format["WPT3_%1",round time]];
+					};
+				};
+			}else {_wpt3 = _grp addWaypoint [_lastPos, 150, 3, format["WPT3_%1",round time]];};
+		} else {
+			_wpt0 = _grp addWaypoint [_pos, 50, 0, format["WPT0_%1",round time]];
+			_wpt1 = _grp addWaypoint [getPos (selectRandom WMS_AL_Roads), 150, 1, format["WPT1_%1",round time]];
+			_wpt2 = _grp addWaypoint [getPos (selectRandom WMS_AL_Roads), 150, 2, format["WPT2_%1",round time]];
+			private _lastPos = getPos (selectRandom WMS_AL_Roads);
+			if (_lastPos distance2D (getWPPos _wpt2) < 150 || _lastPos distance2D (getWPPos _wpt0) < 50) then {
+				private _findPos = true;
+				private _cycles = 100;
+				while {_findPos} do {
+					_lastPos = getPos (selectRandom WMS_AL_Roads);
+					if (_lastPos distance2D (getWPPos _wpt2) > 50 && _lastPos distance2D (getWPPos _wpt0) > 50) then {
+						_findPos = false;
+						_wpt3 = _grp addWaypoint [_lastPos, 150, 3, format["WPT3_%1",round time]];
+					};
+					_cycles = _cycles-1;
+					if (_cycles < 1) then {
+						_findPos = false;
+						_wpt3 = _grp addWaypoint [_lastPos, 150, 3, format["WPT3_%1",round time]];
+					};
+				};
+			}else {_wpt3 = _grp addWaypoint [_lastPos, 150, 3, format["WPT3_%1",round time]];};
+		};
 		_waypoints pushBack _wpt0;
 		_wpt0 setWaypointType "MOVE";
-		private _wpt1 = _grp addWaypoint [getPos (selectRandom WMS_AL_Roads), 150, 1, format["WPT1_%1",round time]];
-		_wpt1 setWaypointType "MOVE";
 		_waypoints pushBack _wpt1;
-		private _wpt2 = _grp addWaypoint [getPos (selectRandom WMS_AL_Roads), 150, 2, format["WPT2_%1",round time]];
-		_wpt2 setWaypointType "MOVE";
+		_wpt1 setWaypointType "MOVE";
 		_waypoints pushBack _wpt2;
-		private _wpt3 = [];
-		private _lastPos = getPos (selectRandom WMS_AL_Roads);
-		if (_lastPos distance2D (getWPPos _wpt2) < 150 || _lastPos distance2D (getWPPos _wpt0) < 50) then {
-			private _findPos = true;
-			private _cycles = 100;
-			while {_findPos} do {
-				_lastPos = getPos (selectRandom WMS_AL_Roads);
-				if (_lastPos distance2D (getWPPos _wpt2) > 50 && _lastPos distance2D (getWPPos _wpt0) > 50) then {
-					_findPos = false;
-					_wpt3 = _grp addWaypoint [_lastPos, 150, 3, format["WPT3_%1",round time]];
-				};
-				_cycles = _cycles-1;
-				if (_cycles < 1) then {
-					_findPos = false;
-					_wpt3 = _grp addWaypoint [_lastPos, 150, 3, format["WPT3_%1",round time]];
-				};
-			};
-		}else {_wpt3 = _grp addWaypoint [_lastPos, 150, 3, format["WPT3_%1",round time]];};
+		_wpt2 setWaypointType "MOVE";
 		_waypoints pushBack _wpt3;
 		_wpt3 setWaypointType "CYCLE";
 		{
@@ -363,9 +425,13 @@ WMS_fnc_AL_Patrol = {
 				_x setWaypointBehaviour "AWARE";
 				_x setWaypointSpeed "NORMAL";
 			} else {
+				if (surfaceIsWater _pos) then {
+					_x setWaypointSpeed "FULL";
+				}else{
+					_x setWaypointSpeed "LIMITED";
+				};
 				_x setWaypointCombatMode "BLUE";
 				_x setWaypointBehaviour "CARELESS";
-				_x setWaypointSpeed "LIMITED";
 			};
 		}forEach _waypoints;
 	};
@@ -409,4 +475,7 @@ WMS_fnc_AL_PunishPunks = { //will be use to remind to those getting in the missi
 
 ///////////////////////////
 {if ("Advanced Combat Environment" in (_x select 0))then {WMS_AL_AceIsRunning = true;}}forEach getLoadedModsInfo;
-if (WMS_AmbientLife) then {[]spawn WMS_fnc_AL_ManagementLoop};
+if (WMS_AmbientLife) then {
+	[] call WMS_fnc_AL_ScanForWater;
+	[] spawn WMS_fnc_AL_ManagementLoop;
+};
