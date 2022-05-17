@@ -19,7 +19,7 @@
 	if (true)then {execVM "WMS_AL_Functions.sqf"};
 */
 
-WMS_AL_Version		= "v0.20_2022MAY17";
+WMS_AL_Version		= "v0.21_2022MAY17";
 WMS_AmbientLife		= true;
 WMS_AL_Standalone	= true; //Keep true if you don't use WMS_DFO or WMS_InfantryProgram
 WMS_AL_LOGs			= false; //Debug
@@ -478,6 +478,7 @@ WMS_fnc_AL_Patrol = {
 				_x setWaypointCombatMode "YELLOW";
 				_x setWaypointBehaviour "AWARE";
 				_x setWaypointSpeed "NORMAL";
+				_x setWaypointCompletionRadius 300;
 			} else {
 				if (surfaceIsWater _pos) then {
 					_x setWaypointSpeed "FULL";
