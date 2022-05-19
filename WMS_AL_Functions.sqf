@@ -19,7 +19,7 @@
 	if (true)then {execVM "WMS_AL_Functions.sqf"};
 */
 
-WMS_AL_Version		= "v0.21_2022MAY17";
+WMS_AL_Version		= "v0.22_2022MAY19";
 WMS_AmbientLife		= true;
 WMS_AL_Standalone	= true; //Keep true if you don't use WMS_DFO or WMS_InfantryProgram
 WMS_AL_LOGs			= false; //Debug
@@ -216,20 +216,21 @@ WMS_fnc_AL_createVHL = {
 		} else {
 			if (_vhl in (WMS_AL_Vehicles select 2)) then {_vhl = selectRandom (WMS_AL_Vehicles select 1)};
 			_road = selectRandom WMS_AL_Roads;
-			_pos = position _road;
+			//_pos = position _road;
+			_pos = [position _road, 0, 100, 15, 0, 0, 0, [], [(position _road),[]]] call BIS_fnc_FindSafePos;
 			if (_pos distance2D WMS_AL_LastUsedPos < 20) then {
-				_pos = [_pos, 25, 250, 20, 0, 0, 0, [], [([] call BIS_fnc_randomPos),[]]] call BIS_fnc_FindSafePos;
+				_pos = [_pos, 25, 250, 25, 0, 0, 0, [], [([] call BIS_fnc_randomPos),[]]] call BIS_fnc_FindSafePos;
 			};
 			_dir = direction _road;
 		};
 		WMS_AL_LastUsedPos = _pos;
 	};
 	private _grp = createGroup WMS_AL_Faction;
-	_waypoints = [_hexaID,_pos,_grp,_vhl,false,_combat] call WMS_fnc_AL_Patrol; //[_hexaID, pos, group, boulean infantry, boulean combat]
 	//2 possibilities, create the vehicle ready to go with crew or create a vehicel and then the crew
 	//lets do the easy one first:
 	private _vehicleData = [_pos, _dir, _vhl, _grp] call BIS_fnc_spawnVehicle; //[createdVehicle, crew, group]
 	private _vhlObject = (_vehicleData select 0);
+	_waypoints = [_hexaID,_pos,_grp,_vhlObject,false,_combat] call WMS_fnc_AL_Patrol; //[_hexaID, pos, group,_vhlObject, boulean infantry, boulean combat]
 	if (WMS_AL_LOGs) then {diag_log format ['|WAK|TNA|WMS|WMS_fnc_AL_createVHL _vehicleData %1', _vehicleData]};
 	if (WMS_AL_LockVehicles) then {_vhlObject lock 3};
 	clearMagazineCargoGlobal _vhlObject; 
@@ -382,7 +383,7 @@ WMS_fnc_AL_Patrol = {
 		"_hexaID",
 		"_pos", 
 		"_grp", 
-		"_vhl",
+		"_vhl", //_vhlObject
 		["_infantry", true],
 		["_combat", WMS_AL_CombatBehav]
 	];
@@ -442,6 +443,7 @@ WMS_fnc_AL_Patrol = {
 						};
 					};
 				}else {_wpt3 = _grp addWaypoint [_lastPos, 150, 3, format["WPT3_%1",round time]];};
+				//if (count (allAirports select 0) != 0) then {_vhl landAt selectRandom (allAirports select 0)}; //NOPE
 			}else {
 				_wpt0 = _grp addWaypoint [_pos, 50, 0, format["WPT0_%1",round time]];
 				_wpt1 = _grp addWaypoint [getPos (selectRandom WMS_AL_Roads), 150, 1, format["WPT1_%1",round time]];
