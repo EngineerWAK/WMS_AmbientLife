@@ -19,7 +19,7 @@
 	if (true)then {execVM "WMS_AL_Functions.sqf"};
 */
 
-WMS_AL_Version		= "v0.22_2022MAY19";
+WMS_AL_Version		= "v0.23_2022MAY20";
 WMS_AmbientLife		= true;
 WMS_AL_Standalone	= true; //Keep true if you don't use WMS_DFO or WMS_InfantryProgram
 WMS_AL_LOGs			= false; //Debug
@@ -67,6 +67,7 @@ WMS_AL_SeaPos		= [];
 WMS_AL_Running		= [[],[]]; //array of arrays of data [[VEHICLES],[INFANTRY]] //[HexaID,time,group,vehicle]
 
 ///////////////////////////////////////
+//Variables
 if (WMS_AL_Standalone) then {
 		//WMS_exileFireAndForget = false;
 	WMS_AMS_MaxGrad 	= 0.15;
@@ -81,10 +82,69 @@ if (WMS_AL_Standalone) then {
 		//WMS_Pos_Custom	 	= []; //DIY, if no position, back to random _pos
 };
 ///////////////////////////////////////
+//Functions
+if (WMS_AL_Standalone) then {
+	WMS_fnc_GenerateHexaID = {	//will be used to find the mission data in arrays
+		private _hexaBase = [0,1,2,3,4,5,6,7,8,9,"a","b","c","e","e","f"];
+		private _hexaArray = [];
+		for "_i" from 1 to 8 do {
+			_hexaArray pushBack	(selectRandom _hexaBase);
+		};
+		private _MissionHexaID = format ["%1%2%3%4%5%6%7%8",(_hexaArray select 0),(_hexaArray select 1),(_hexaArray select 2),(_hexaArray select 3),(_hexaArray select 4),(_hexaArray select 5),(_hexaArray select 6),(_hexaArray select 7)];
+		if (WMS_AL_LOGs) then {diag_log format ['|WAK|TNA|WMS|WMS_fnc_AL_generateHexaID _MissionHexaID %1', _MissionHexaID]};
+		_MissionHexaID
+	};
+	WMS_fnc_CollectPos = { //at server launch
+		if (WMS_AL_LOGs) then {diag_log format ['|WAK|TNA|WMS|WMS_fnc_AL_CollectPos time %1', time]};
+		private _worldCenter 	= [worldsize/2,worldsize/2,0]; 
+		private _worldDiameter 	= ((worldsize/2)*1.413);
+		if (WMS_AL_LOGs) then {Diag_log '|WAK|TNA|WMS|[AL] collecting LOCALS positions'};
+		{WMS_Pos_Locals pushback getPos _x}forEach (nearestLocations [_worldCenter, ["nameLocal"],_worldDiameter]);
+		if (WMS_AL_LOGs) then {Diag_log '|WAK|TNA|WMS|[AL] collecting VILLAGES positions'};
+		{WMS_Pos_Villages pushback getPos _x}forEach (nearestLocations [_worldCenter, ["nameVillage"],_worldDiameter]);
+		if (WMS_AL_LOGs) then {Diag_log '|WAK|TNA|WMS|[AL] collecting CITIES positions'};
+		{WMS_Pos_Cities pushback getPos _x}forEach (nearestLocations [_worldCenter, ["nameCity"],_worldDiameter]);
+		if (WMS_AL_LOGs) then {Diag_log '|WAK|TNA|WMS|[AL] collecting CAPITALS positions'};
+		{WMS_Pos_Capitals pushback getPos _x}forEach (nearestLocations [_worldCenter, ["nameCityCapital"],_worldDiameter]);
+	};
+	WMS_fnc_ScanForWater = { //this one will be a tricky one
+		if (WMS_AL_LOGs) then {Diag_log format ['|WAK|TNA|WMS|WMS_fnc_AL_ScanForWater start scanning %1', time]};
+		params [
+			["_resolution", 1000], //1km resolution
+			["_closeLand", true] //thats pretty hardcore on server for few seconds if a lot of water but it's worth it
+		];
+		private _size = worldSize;
+		private _divide = (round (_size/_resolution))-1;
+		private _steps = []; //[1000,2000,3000,4000,5000,6000,7000,8000] for a 8km map 1000m resolution
+		private _step = _resolution;
+		private _scanPos = [_resolution,_resolution];
+		for "_i" from 1 to _divide do {
+			_steps pushback _step;
+			_step = _step+_resolution;
+		};
+		{
+			private _Xaxis = _x;
+			{
+				_scanPos = [_Xaxis,_x,0];
+				if (surfaceIsWater _scanPos && {((ATLtoASL _scanPos) select 2) <= -3}) then {
+					if (_closeLand) then {
+						private _land = nearestTerrainObjects [_scanPos,["TREE", "SMALL TREE", "BUSH", "BUILDING", "HOUSE","ROAD"],1500];
+						if (count _land != 0) then {WMS_AL_SeaPos pushback _scanPos};
+					}else{
+						WMS_AL_SeaPos pushback _scanPos;
+					};
+				};
+			}forEach _steps; //this steps become Y axis
+		}forEach _steps; //this steps become X axis
+		if (WMS_AL_LOGs) then {Diag_log format ['|WAK|TNA|WMS|WMS_fnc_AL_ScanForWater Scan finished  %1, %2 positions found', time, count WMS_AL_SeaPos]};
+		(count WMS_AL_SeaPos)
+	};
+};
+///////////////////////////////////////
 WMS_fnc_AL_ManagementLoop = {
 	if (WMS_AL_LOGs) then {diag_log format ['|WAK|TNA|WMS|WMS_fnc_AL_ManagementLoop time %1', time]};
 	if (WMS_AL_Standalone) then {
-		[]call WMS_fnc_AL_CollectPos;
+		[]call WMS_fnc_CollectPos;
 	};
 	uisleep 15;
 	[]call WMS_fnc_AL_FindRoad;
@@ -129,19 +189,6 @@ WMS_fnc_AL_ManagementLoop = {
 		uisleep 115;
 	};
 };
-WMS_fnc_AL_CollectPos = { //at server launch
-	if (WMS_AL_LOGs) then {diag_log format ['|WAK|TNA|WMS|WMS_fnc_AL_CollectPos time %1', time]};
-	private _worldCenter 	= [worldsize/2,worldsize/2,0]; 
-	private _worldDiameter 	= ((worldsize/2)*1.413);
-	if (WMS_AL_LOGs) then {Diag_log '|WAK|TNA|WMS|[AL] collecting LOCALS positions'};
-	{WMS_Pos_Locals pushback getPos _x}forEach (nearestLocations [_worldCenter, ["nameLocal"],_worldDiameter]);
-	if (WMS_AL_LOGs) then {Diag_log '|WAK|TNA|WMS|[AL] collecting VILLAGES positions'};
-	{WMS_Pos_Villages pushback getPos _x}forEach (nearestLocations [_worldCenter, ["nameVillage"],_worldDiameter]);
-	if (WMS_AL_LOGs) then {Diag_log '|WAK|TNA|WMS|[AL] collecting CITIES positions'};
-	{WMS_Pos_Cities pushback getPos _x}forEach (nearestLocations [_worldCenter, ["nameCity"],_worldDiameter]);
-	if (WMS_AL_LOGs) then {Diag_log '|WAK|TNA|WMS|[AL] collecting CAPITALS positions'};
-	{WMS_Pos_Capitals pushback getPos _x}forEach (nearestLocations [_worldCenter, ["nameCityCapital"],_worldDiameter]);
-};
 WMS_fnc_AL_FindRoad = { //at server launch
 	if (WMS_AL_LOGs) then {diag_log format ['|WAK|TNA|WMS|WMS_fnc_AL_FindRoad time %1', time]};
 	private _arrayOfPos = WMS_Pos_Villages+WMS_Pos_Cities+WMS_Pos_Capitals;
@@ -158,48 +205,6 @@ WMS_fnc_AL_FindRoad = { //at server launch
 	}forEach _arrayOfPos;
 	if (WMS_AL_LOGs) then {Diag_log format ['|WAK|TNA|WMS|WMS_fnc_AL_FindRoad %1 roads found', (count WMS_AL_Roads)]};
 };
-WMS_fnc_AL_ScanForWater = { //this one will be a tricky one
-	if (WMS_AL_LOGs) then {Diag_log format ['|WAK|TNA|WMS|WMS_fnc_AL_ScanForWater start scanning %1', time]};
-	params [
-		["_resolution", 1000], //1km resolution
-		["_closeLand", true] //thats pretty hardcore on server for few seconds if a lot of water but it's worth it
-	];
-	private _size = worldSize;
-	private _divide = (round (_size/_resolution))-1;
-	private _steps = []; //[1000,2000,3000,4000,5000,6000,7000,8000] for a 8km map 1000m resolution
-	private _step = _resolution;
-	private _scanPos = [_resolution,_resolution];
-	for "_i" from 1 to _divide do {
-		_steps pushback _step;
-		_step = _step+_resolution;
-	};
-	{
-		private _Xaxis = _x;
-		{
-			_scanPos = [_Xaxis,_x,0];
-			if (surfaceIsWater _scanPos && {((ATLtoASL _scanPos) select 2) <= -3}) then {
-				if (_closeLand) then {
-					private _land = nearestTerrainObjects [_scanPos,["TREE", "SMALL TREE", "BUSH", "BUILDING", "HOUSE","ROAD"],1500];
-					if (count _land != 0) then {WMS_AL_SeaPos pushback _scanPos};
-				}else{
-					WMS_AL_SeaPos pushback _scanPos;
-				};
-			};
-		}forEach _steps; //this steps become Y axis
-	}forEach _steps; //this steps become X axis
-	if (WMS_AL_LOGs) then {Diag_log format ['|WAK|TNA|WMS|WMS_fnc_AL_ScanForWater Scan finished  %1, %2 positions found', time, count WMS_AL_SeaPos]};
-	(count WMS_AL_SeaPos)
-};
-WMS_fnc_AL_generateHexaID = {	//will be used to find the mission data in arrays
-	private _hexaBase = [0,1,2,3,4,5,6,7,8,9,"a","b","c","e","e","f"];
-	private _hexaArray = [];
-	for "_i" from 1 to 8 do {
-		_hexaArray pushBack	(selectRandom _hexaBase);
-	};
-	private _MissionHexaID = format ["%1%2%3%4%5%6%7%8",(_hexaArray select 0),(_hexaArray select 1),(_hexaArray select 2),(_hexaArray select 3),(_hexaArray select 4),(_hexaArray select 5),(_hexaArray select 6),(_hexaArray select 7)];
-	if (WMS_AL_LOGs) then {diag_log format ['|WAK|TNA|WMS|WMS_fnc_AL_generateHexaID _MissionHexaID %1', _MissionHexaID]};
-	_MissionHexaID
-};
 WMS_fnc_AL_createVHL = {
 	if (WMS_AL_LOGs) then {diag_log format ['|WAK|TNA|WMS|WMS_fnc_AL_createVHL _this %1', _this]};
 	params [
@@ -209,7 +214,7 @@ WMS_fnc_AL_createVHL = {
 	];
 	private _dir = Random 359;
 	private _waypoints = [];
-	private _hexaID = []call WMS_fnc_AL_generateHexaID;
+	private _hexaID = []call WMS_fnc_generateHexaID;
 	if(count _pos == 0) then {
 		if (_vhl in (WMS_AL_Vehicles select 2) && {count WMS_AL_SeaPos >= 9}) then {
 			_pos = selectRandom WMS_AL_SeaPos;
@@ -227,7 +232,7 @@ WMS_fnc_AL_createVHL = {
 	};
 	private _grp = createGroup WMS_AL_Faction;
 	//2 possibilities, create the vehicle ready to go with crew or create a vehicel and then the crew
-	//lets do the easy one first:
+	//lets do the easy one first: //this way spawn the vehicle AND the crew, which pose problem with BIS command "side" ruturning the faction from a config and not the chosen one
 	private _vehicleData = [_pos, _dir, _vhl, _grp] call BIS_fnc_spawnVehicle; //[createdVehicle, crew, group]
 	private _vhlObject = (_vehicleData select 0);
 	_waypoints = [_hexaID,_pos,_grp,_vhlObject,false,_combat] call WMS_fnc_AL_Patrol; //[_hexaID, pos, group,_vhlObject, boulean infantry, boulean combat]
@@ -238,9 +243,9 @@ WMS_fnc_AL_createVHL = {
 	clearItemCargoGlobal _vhlObject; 
 	clearBackpackCargoGlobal _vhlObject;
 	_vhlObject setVariable ["WMS_AL_lastPos", position _vhlObject];
-	_vhlObject setVariable ["WMS_AL_hexaID", _hexaID];
+	_vhlObject setVariable ["WMS_HexaID", _hexaID];
 	[(_vehicleData select 1)] call WMS_fnc_AL_setUnits;
-	_vhlObject setVariable ["WMS_AL_RealFuckingSide",WMS_AL_Faction];
+	_vhlObject setVariable ["WMS_RealFuckingSide",WMS_AL_Faction];
 	_vhlObject addEventHandler ["Killed", " 
 		[(_this select 0),(_this select 1),(_this select 2)] call WMS_fnc_AL_VhlEH;
 		"];//params ["_unit", "_killer", "_instigator", "_useEffects"];
@@ -257,7 +262,7 @@ WMS_fnc_AL_createUnits = {
 	private _unitObject = ObjNull;
 	private _dir = Random 359;
 	private _waypoints = [];
-	private _hexaID = []call WMS_fnc_AL_generateHexaID;
+	private _hexaID = []call WMS_fnc_generateHexaID;
 	if (_combat) then {_unitsCount = selectRandom [2,2,3]};
 	if(count _pos == 0) then {
 		_road = selectRandom WMS_AL_Roads;
@@ -272,7 +277,7 @@ WMS_fnc_AL_createUnits = {
 	_waypoints = [_hexaID,_pos,_grp,"nan",true,_combat] call WMS_fnc_AL_Patrol; //[_hexaID, pos, group, boulean infantry, boulean combat]
 	for "_i" from 1 to _unitsCount do {
 		_unitObject = _grp createUnit [selectRandom _units, _pos, [], 15, "FORM"];
-		_unitObject setVariable ["WMS_AL_hexaID", _hexaID];
+		_unitObject setVariable ["WMS_HexaID", _hexaID];
 	};
 	
 	[units _grp] call WMS_fnc_AL_setUnits;
@@ -299,7 +304,7 @@ WMS_fnc_AL_setUnits = {
 		_x setSkill ["general", 		(_skills select 8)];
 		_x setVariable ["WMS_DFO_options",_options];
 		_x allowFleeing 0;
-		_x setVariable ["WMS_AL_RealFuckingSide",WMS_AL_Faction];
+		_x setVariable ["WMS_RealFuckingSide",WMS_AL_Faction];
 		_x addEventHandler ["Killed", " 
 		[(_this select 0),(_this select 1),(_this select 2)] call WMS_fnc_AL_UnitEH;
 		"];//params ["_unit", "_killer", "_instigator", "_useEffects"];
@@ -314,10 +319,10 @@ WMS_fnc_AL_UnitEH = {
 		"_instigator"
 	];
 	if (isPlayer _instigator) then {_killer = _instigator};
-	if(isPlayer _killer && {((side _killer) getfriend (_killed getVariable ["WMS_AL_RealFuckingSide",WMS_AL_Faction])) > 0.5}) then {
+	if(isPlayer _killer && {((side _killer) getfriend (_killed getVariable ["WMS_RealFuckingSide",WMS_AL_Faction])) > 0.5}) then {
 		[_killer] call WMS_fnc_AL_PunishPunks;
 	};
-	private _hexaID = _killed getVariable ["WMS_AL_hexaID", "zzzzzzzz"];
+	private _hexaID = _killed getVariable ["WMS_HexaID", "zzzzzzzz"];
 	if (WMS_AL_StripOffUnit) then {
 		_killed removeWeapon (primaryWeapon _killed);
 		_killed removeWeapon (secondaryWeapon _killed); //launcher
@@ -348,8 +353,8 @@ WMS_fnc_AL_VhlEH = {
 		"_instigator"
 	];
 	if (isPlayer _instigator) then {_killer = _instigator};
-	private _hexaID = _killed getVariable ["WMS_AL_hexaID", "zzzzzzzz"];
-	if(isPlayer _killer && {((side _killer) getfriend (_killed getVariable ["WMS_AL_RealFuckingSide",WMS_AL_Faction])) > 0.5}) then {
+	private _hexaID = _killed getVariable ["WMS_HexaID", "zzzzzzzz"];
+	if(isPlayer _killer && {((side _killer) getfriend (_killed getVariable ["WMS_RealFuckingSide",WMS_AL_Faction])) > 0.5}) then {
 		[_killer] call WMS_fnc_AL_PunishPunks;
 	};
 	{
@@ -533,6 +538,6 @@ WMS_fnc_AL_PunishPunks = { //will be use to remind to those getting in the missi
 ///////////////////////////
 {if ("Advanced Combat Environment" in (_x select 0))then {WMS_AL_AceIsRunning = true;}}forEach getLoadedModsInfo;
 if (WMS_AmbientLife) then {
-	[] call WMS_fnc_AL_ScanForWater;
+	[] call WMS_fnc_ScanForWater;
 	[] spawn WMS_fnc_AL_ManagementLoop;
 };
