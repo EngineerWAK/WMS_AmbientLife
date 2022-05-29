@@ -45,8 +45,40 @@ WMS_AL_Vehicles		= [[ //[[AIR],[GROUND],[SEA]]
 						"C_Boat_Civil_01_F","C_Boat_Civil_01_police_F","C_Boat_Civil_01_rescue_F","C_Rubberboat","C_Boat_Transport_02_F","C_Scooter_Transport_01_F"
 					]];
 /*
+//GM
+WMS_AL_CombatBehav	= false;
+WMS_AL_Faction		= CIVILIAN;
+WMS_AL_Units		= [//array of classnames
+						"gm_gc_civ_man_02_80_gry","gm_gc_civ_man_01_80_blk","gm_gc_civ_man_03_80_blu","gm_gc_civ_man_02_80_brn","gm_gc_civ_man_03_80_grn","gm_gc_civ_man_03_80_gry","gm_gc_civ_pilot_80_blk","gm_gc_pol_officer_80_blu","gm_gc_civ_man_04_80_blu",
+						"gm_gc_civ_man_04_80_gry","gm_ge_ff_man_80_orn","gm_ge_dbp_man_01_80_blu","gm_ge_adak_pilot_80_sar","gm_ge_pol_officer_80_grn","gm_ge_pol_patrol_80_blk"
+						]; 
+WMS_AL_Vehicles		= [[ //array of arrays or classnames //[[AIR],[GROUND],[SEA]]
+						"gm_ge_adak_bo105m_vbh","gm_ge_pol_bo105m_vbh","gm_gc_civ_mi2p","gm_gc_civ_mi2r","gm_gc_civ_mi2sr","gm_gc_civ_l410s_salon"
+					],[
+						"gm_gc_civ_p601","gm_gc_ff_p601","gm_gc_pol_p601","gm_gc_dp_p601","gm_gc_civ_ural375d_cargo","gm_ge_civ_u1300l","gm_ge_civ_typ1200","gm_ge_ff_typ1200","gm_ge_pol_typ1200","gm_ge_dbp_typ1200","gm_ge_ff_u1300l_firefighter","gm_xx_civ_bicycle_01","gm_ge_pol_bicycle_01_grn"
+					],[
+						"O_Boat_Transport_01_F","O_Boat_Armed_01_hmg_F","O_Boat_Transport_01_F" //No civilan boats in GM
+					]];
+///////////////////////
+//GM OPFOR
 WMS_AL_CombatBehav	= true;
-WMS_AL_Faction		= OPFOR; //RHS
+WMS_AL_Faction		= OPFOR;
+WMS_AL_Units		= [//array of classnames
+						"gm_gc_army_antiair_mpiak74n_9k32m_80_str","gm_gc_army_antitank_mpiak74n_rpg7_80_str","gm_gc_army_machinegunner_lmgrpk_80_str","gm_gc_army_machinegunner_pk_80_str","gm_gc_army_medic_mpiak74n_80_str",
+						"gm_gc_army_radioman_mpiak74n_80_str","gm_gc_army_rifleman_mpiak74n_80_str","gm_gc_army_sf_engineer_mpikms72_80_str","gm_gc_army_sf_marksman_svd_80_str","gm_gc_army_sf_demolition_pm63_80_str"
+						]; 
+WMS_AL_Vehicles		= [[ //array of arrays or classnames //[[AIR],[GROUND],[SEA]]
+						"gm_gc_airforce_mi2p","gm_gc_airforce_mi2sr","gm_gc_airforce_mi2t","gm_gc_airforce_mi2urn","gm_gc_airforce_mi2us","gm_gc_airforce_l410t"
+					],[
+						"gm_gc_army_brdm2um","gm_gc_army_btr60pa","gm_gc_army_btr60pb","gm_gc_army_btr60pu12","gm_gc_army_p601","gm_gc_army_uaz469_cargo","gm_gc_army_ural4320_reammo","gm_gc_army_ural375d_refuel","gm_gc_army_ural44202","gm_gc_army_ural4320_cargo","gm_gc_army_ural4320_repair","gm_pl_army_ot64a",
+						"gm_pl_army_pt76b","gm_pl_army_t55","gm_pl_army_t55a","gm_pl_army_t55ak","gm_pl_army_uaz469_dshkm","gm_pl_army_ural375d_mlrs","gm_pl_army_2p16","gm_pl_army_bmp1sp2","gm_pl_army_brdm2","gm_pl_army_zsu234v1"
+					],[
+						"O_Boat_Transport_01_F","O_Boat_Armed_01_hmg_F","O_Boat_Transport_01_F" //No civilan boats in GM
+					]];
+///////////////////////
+//RHS
+WMS_AL_CombatBehav	= true;
+WMS_AL_Faction		= OPFOR;
 WMS_AL_Units		= [//array of classnames
 						"rhs_vdv_mflora_at","rhs_vdv_mflora_arifleman_rpk","rhs_vdv_mflora_efreitor","rhs_vdv_mflora_engineer","rhs_vdv_mflora_machinegunner","rhs_vdv_mflora_marksman","rhs_vdv_mflora_medic","rhs_vdv_mflora_rifleman","rhs_vdv_mflora_grenadier","rhs_vdv_mflora_sergeant"
 						]; 
@@ -59,9 +91,10 @@ WMS_AL_Vehicles		= [[ //array of arrays or classnames //[[AIR],[GROUND],[SEA]]
 					],[
 						"O_Boat_Transport_01_F","O_Boat_Armed_01_hmg_F","O_Boat_Transport_01_F"
 					]];
-
+///////////////////////
+//RHS
 WMS_AL_CombatBehav	= true;
-WMS_AL_Faction		= BLUFOR; //RHS
+WMS_AL_Faction		= BLUFOR;
 WMS_AL_Units		= [//array of classnames
 						
 						]; 
