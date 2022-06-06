@@ -19,7 +19,7 @@
 	if (true)then {execVM "WMS_AL_Functions.sqf"};
 */
 
-WMS_AL_Version		= "v0.24_2022MAY22";
+WMS_AL_Version		= "v0.26_2022JUN06";
 WMS_AmbientLife		= true;
 WMS_AL_Standalone	= false; //Keep true if you don't use WMS_DFO or WMS_InfantryProgram
 WMS_AL_LOGs			= false; //Debug
@@ -108,15 +108,13 @@ WMS_AL_Vehicles		= [[ //array of arrays or classnames //[[AIR],[GROUND],[SEA]]
 */
 WMS_AL_AceIsRunning = true; //Automatic
 WMS_AL_LastUsedPos	= [0,0,0]; //Dynamic
-WMS_Roads		= []; //array of roads //Dynamic //pushBack //You can put yours if you want but the system will pushback roads here
-WMS_SeaPos		= [];
 WMS_AL_Running		= [[],[]]; //array of arrays of data [[VEHICLES],[INFANTRY]] //[HexaID,time,group,vehicle]
 
 ///////////////////////////////////////
 //Variables
 if (WMS_AL_Standalone) then {
 	WMS_SeaPos = [];
-	WMS_Roads = [];
+	WMS_Roads = []; //array of roads //Dynamic //pushBack //You can put yours if you want but the system will pushback roads here
 		//WMS_exileFireAndForget = false;
 	WMS_AMS_MaxGrad 	= 0.15;
 		//WMS_exileToastMsg 	= false; //Exile Mod Notifications
@@ -130,7 +128,7 @@ if (WMS_AL_Standalone) then {
 		//WMS_Pos_Custom	 	= []; //DIY, if no position, back to random _pos
 };
 ///////////////////////////////////////
-//Functions
+//Standalone stuff
 if (WMS_AL_Standalone) then {
 	WMS_fnc_GenerateHexaID = {	//will be used to find the mission data in arrays
 		private _hexaBase = [0,1,2,3,4,5,6,7,8,9,"a","b","c","e","e","f"];
@@ -205,6 +203,7 @@ if (WMS_AL_Standalone) then {
 	};
 };
 ///////////////////////////////////////
+//ManagementLoop
 WMS_fnc_AL_ManagementLoop = {
 	if (WMS_AL_LOGs) then {diag_log format ['|WAK|TNA|WMS|WMS_fnc_AL_ManagementLoop time %1', time]};
 	uisleep 5;
@@ -218,7 +217,7 @@ WMS_fnc_AL_ManagementLoop = {
 	};
 	uisleep 120;
 	while {WMS_AmbientLife} do {
-		if (true) then {diag_log format ['|WAK|TNA|WMS|WMS_fnc_AL_ManagementLoop time %1 server FPS %2, players %3', time, diag_fps, count allPlayers]};
+		if (true) then {diag_log format ['|WAK|TNA|WMS|WMS_fnc_AL_ManagementLoop Side: %1, Units: %4, server FPS %2, players %3', WMS_AL_Faction, diag_fps, count allPlayers, (WMS_AL_Faction countSide allUnits)]};
 		//respawn missing vehicles, ONE per loop
 		if (count (WMS_AL_Running select 0) < WMS_AL_VHLmax) then {
 			if (WMS_AL_LOGs) then {diag_log format ['|WAK|TNA|WMS|WMS_fnc_AL_ManagementLoop spawning a new vehicle %1', time]};
@@ -248,6 +247,9 @@ WMS_fnc_AL_ManagementLoop = {
 		uisleep 115;
 	};
 };
+///////////////////////////////////////
+//Functions
+///////////////////////////////////////
 WMS_fnc_AL_createVHL = {
 	if (WMS_AL_LOGs) then {diag_log format ['|WAK|TNA|WMS|WMS_fnc_AL_createVHL _this %1', _this]};
 	params [
@@ -258,18 +260,27 @@ WMS_fnc_AL_createVHL = {
 	private _dir = Random 359;
 	private _waypoints = [];
 	private _hexaID = []call WMS_fnc_generateHexaID;
+	private _road = objNull;
+	private _arrayOfPos = [];
 	if(count _pos == 0) then {
 		if (_vhl in (WMS_AL_Vehicles select 2) && {count WMS_SeaPos >= 9}) then {
 			_pos = selectRandom WMS_SeaPos;
 		} else {
 			if (_vhl in (WMS_AL_Vehicles select 2)) then {_vhl = selectRandom (WMS_AL_Vehicles select 1)};
-			_road = selectRandom WMS_Roads;
-			//_pos = position _road;
-			_pos = [position _road, 0, 100, 15, 0, 0, 0, [], [(position _road),[]]] call BIS_fnc_FindSafePos;
-			if (_pos distance2D WMS_AL_LastUsedPos < 20) then {
-				_pos = [_pos, 25, 250, 25, 0, 0, 0, [], [([] call BIS_fnc_randomPos),[]]] call BIS_fnc_FindSafePos;
+			if (count WMS_Roads != 0) then { 
+				_road = selectRandom WMS_Roads;
+				//_pos = position _road; //if they are too slow to move, they can spawn on eachothers
+				_pos = [position _road, 0, 100, 15, 0, 0, 0, [], [(position _road),[]]] call BIS_fnc_FindSafePos;
+				if (_pos distance2D WMS_AL_LastUsedPos < 20) then {
+					_pos = [_pos, 25, 250, 25, 0, 0, 0, [], [([] call BIS_fnc_randomPos),[]]] call BIS_fnc_FindSafePos;
+				};
+				_dir = direction _road;
+			} else { //WAYPOINTS also use WMS_Roads, at this point it's fuckedUp
+				_arrayOfPos = WMS_Pos_Villages+WMS_Pos_Cities+WMS_Pos_Capitals+WMS_Pos_Locals;
+				_pos = (selectRandom _arrayOfPos);
+				_pos = [_pos, 0, 100, 15, 0, 0, 0, [], [_pos,[]]] call BIS_fnc_FindSafePos;
+				_dir = random 359;
 			};
-			_dir = direction _road;
 		};
 		WMS_AL_LastUsedPos = _pos;
 	};
@@ -591,7 +602,7 @@ WMS_fnc_AL_PunishPunks = { //will be use to remind to those getting in the missi
 ///////////////////////////
 {if ("Advanced Combat Environment" in (_x select 0))then {WMS_AL_AceIsRunning = true;}}forEach getLoadedModsInfo;
 
-if (WMS_DFO_Standalone) then {
+if (WMS_AL_Standalone) then {
 	[]call WMS_fnc_CollectPos;
 	[]call WMS_fnc_ScanForWater;
 	[]call WMS_fnc_FindRoad;
@@ -599,4 +610,5 @@ if (WMS_DFO_Standalone) then {
 uisleep 15;
 if (WMS_AmbientLife) then {
 	[] spawn WMS_fnc_AL_ManagementLoop;
+	if (true) then {diag_log format ['|WAK|TNA|WMS|WMS_AmbientLife Started, version %1', WMS_AL_Version]};
 };
