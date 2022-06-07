@@ -19,7 +19,7 @@
 	if (true)then {execVM "WMS_AL_Functions.sqf"};
 */
 
-WMS_AL_Version		= "v0.26_2022JUN06";
+WMS_AL_Version		= "v0.27_2022JUN06"; //_vhlObject setVariable ["WMS_KickVehAss",0,true];
 WMS_AmbientLife		= true;
 WMS_AL_Standalone	= false; //Keep true if you don't use WMS_DFO or WMS_InfantryProgram
 WMS_AL_LOGs			= false; //Debug
@@ -298,6 +298,7 @@ WMS_fnc_AL_createVHL = {
 	clearBackpackCargoGlobal _vhlObject;
 	_vhlObject setVariable ["WMS_AL_lastPos", position _vhlObject];
 	_vhlObject setVariable ["WMS_HexaID", _hexaID];
+	_vhlObject setVariable ["WMS_KickVehAss",0,true]; //for the unstick fonction from InfantryProgram
 	[(_vehicleData select 1)] call WMS_fnc_AL_setUnits;
 	_vhlObject setVariable ["WMS_RealFuckingSide",WMS_AL_Faction];
 	_vhlObject addEventHandler ["Killed", " 
