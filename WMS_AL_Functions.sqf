@@ -19,7 +19,7 @@
 	if (true)then {execVM "WMS_AL_Functions.sqf"};
 */
 
-WMS_AL_Version		= "v0.27_2022JUN06"; //_vhlObject setVariable ["WMS_KickVehAss",0,true];
+WMS_AL_Version		= "v0.28_2022JUN09"; //_vhlObject setVariable ["WMS_KickVehAss",0,true];
 WMS_AmbientLife		= true;
 WMS_AL_Standalone	= false; //Keep true if you don't use WMS_DFO or WMS_InfantryProgram
 WMS_AL_LOGs			= false; //Debug
@@ -218,16 +218,6 @@ WMS_fnc_AL_ManagementLoop = {
 	uisleep 120;
 	while {WMS_AmbientLife} do {
 		if (true) then {diag_log format ['|WAK|TNA|WMS|WMS_fnc_AL_ManagementLoop Side: %1, Units: %4, server FPS %2, players %3', WMS_AL_Faction, diag_fps, count allPlayers, (WMS_AL_Faction countSide allUnits)]};
-		//respawn missing vehicles, ONE per loop
-		if (count (WMS_AL_Running select 0) < WMS_AL_VHLmax) then {
-			if (WMS_AL_LOGs) then {diag_log format ['|WAK|TNA|WMS|WMS_fnc_AL_ManagementLoop spawning a new vehicle %1', time]};
-			[] call WMS_fnc_AL_createVHL;
-		};
-		//respawn missing dudes, ONE (group) per loop
-		if (count (WMS_AL_Running select 1) < WMS_AL_UnitMax) then {
-			if (WMS_AL_LOGs) then {diag_log format ['|WAK|TNA|WMS|WMS_fnc_AL_ManagementLoop spawning a new little dude %1', time]};
-			[] call WMS_fnc_AL_createUnits;
-		};
 		{
 			//destroying stuck vehicles
 			if (speed ((_x select 3) select 0) < 3) then {
@@ -244,6 +234,16 @@ WMS_fnc_AL_ManagementLoop = {
 			};
 			uisleep 0.2;
 		}forEach (WMS_AL_Running select 0);
+		//respawn missing vehicles, ONE per loop
+		if (count (WMS_AL_Running select 0) < WMS_AL_VHLmax) then {
+			if (WMS_AL_LOGs) then {diag_log format ['|WAK|TNA|WMS|WMS_fnc_AL_ManagementLoop spawning a new vehicle %1', time]};
+			[] call WMS_fnc_AL_createVHL;
+		};
+		//respawn missing dudes, ONE (group) per loop
+		if (count (WMS_AL_Running select 1) < WMS_AL_UnitMax) then {
+			if (WMS_AL_LOGs) then {diag_log format ['|WAK|TNA|WMS|WMS_fnc_AL_ManagementLoop spawning a new little dude %1', time]};
+			[] call WMS_fnc_AL_createUnits;
+		};
 		uisleep 115;
 	};
 };
