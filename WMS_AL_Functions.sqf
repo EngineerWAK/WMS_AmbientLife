@@ -19,7 +19,7 @@
 	if (true)then {execVM "WMS_AL_Functions.sqf"};
 */
 
-WMS_AL_Version		= "v0.28_2022JUN09"; //_vhlObject setVariable ["WMS_KickVehAss",0,true];
+WMS_AL_Version		= "v0.29_2022AUG02"; //GM Vehicles;
 WMS_AmbientLife		= true;
 WMS_AL_Standalone	= false; //Keep true if you don't use WMS_DFO or WMS_InfantryProgram
 WMS_AL_LOGs			= false; //Debug
@@ -53,11 +53,11 @@ WMS_AL_Units		= [//array of classnames
 						"gm_gc_civ_man_04_80_gry","gm_ge_ff_man_80_orn","gm_ge_dbp_man_01_80_blu","gm_ge_adak_pilot_80_sar","gm_ge_pol_officer_80_grn","gm_ge_pol_patrol_80_blk"
 						]; 
 WMS_AL_Vehicles		= [[ //array of arrays or classnames //[[AIR],[GROUND],[SEA]]
-						"gm_ge_adak_bo105m_vbh","gm_ge_pol_bo105m_vbh","gm_gc_civ_mi2p","gm_gc_civ_mi2r","gm_gc_civ_mi2sr","gm_gc_civ_l410s_salon"
+						"gm_gc_civ_l410s_salon","gm_ge_pol_bo105m_vbh","gm_gc_civ_mi2p","gm_ge_adak_bo105m_vbh","gm_gc_civ_mi2sr"
 					],[
-						"gm_gc_civ_p601","gm_gc_ff_p601","gm_gc_pol_p601","gm_gc_dp_p601","gm_gc_civ_ural375d_cargo","gm_ge_civ_u1300l","gm_ge_civ_typ1200","gm_ge_ff_typ1200","gm_ge_pol_typ1200","gm_ge_dbp_typ1200","gm_ge_ff_u1300l_firefighter","gm_xx_civ_bicycle_01","gm_ge_pol_bicycle_01_grn"
+						"gm_gc_civ_p601","gm_gc_ff_p601","gm_gc_pol_p601","gm_gc_dp_p601","gm_gc_civ_ural375d_cargo","gm_xx_civ_bicycle_01","gm_ge_civ_u1300l","gm_ge_civ_typ1200","gm_ge_ff_typ1200","gm_ge_pol_typ1200","gm_ge_dbp_typ1200","gm_ge_ff_u1300l_firefighter"
 					],[
-						"O_Boat_Transport_01_F","O_Boat_Armed_01_hmg_F","O_Boat_Transport_01_F" //No civilan boats in GM
+						"C_Boat_Civil_01_F","C_Boat_Civil_01_police_F","C_Boat_Civil_01_rescue_F","C_Rubberboat","C_Boat_Transport_02_F","C_Scooter_Transport_01_F" //No civilan boats in GM
 					]];
 ///////////////////////
 //GM OPFOR
